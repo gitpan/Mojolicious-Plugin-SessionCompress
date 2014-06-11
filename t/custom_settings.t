@@ -8,35 +8,42 @@ use lib "$FindBin::Bin/../lib";
 use Mojolicious::Lite;
 use Test::Mojo;
 
-use Compress::Zlib qw(memGzip memGunzip);
+use Compress::Zlib qw(deflateInit inflateInit Z_STREAM_END);
 use Data::Dumper 'Dumper';
 $Data::Dumper::Terse = 1;
 
 
 plugin session_compress => {
   compress => sub {
-    ok(1, 'Used custom compress');
-    goto &memGzip
-  },
-  decompress => sub {
     my $string = shift;
 
+    ok(1, 'Used custom compress');
+    my $d = deflateInit(-Level => 1, -memLevel => 5, -WindowBits => -15);
+    return $d->deflate($string) . $d->flush;
+  },
+  decompress => sub {
+    my $string = $_[0];
+
     ok(1, 'Used custom decompress');
-    my $out;
-    return $out if ($out = memGunzip($string));
-    return $string;
+    my $d = inflateInit(-WindowBits => -15);
+    my ($inflated, $status) = $d->inflate($string);
+    # Check to see if it's actually compressed
+    return $_[0] if $status != Z_STREAM_END || length($inflated) <= 1;
+    return $inflated;
   },
   serialize => sub {
+    my $hashref = shift;
+
     ok(1, 'Used custom serialize');
-    goto &Dumper
+    return Dumper($hashref);
   },
   deserialize => sub {
     my $string = shift;
 
     ok(1, 'Used custom deserialize');
-    return eval $string;
+    eval $string;
   },
-  min_size => 75
+  min_size => 100
 };
 
 get '/sessionsmall' => sub {

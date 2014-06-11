@@ -15,11 +15,15 @@ WriteMakefile(
         'ExtUtils::MakeMaker' => 0,
     },
     BUILD_REQUIRES => {
-        'Test::More' => 0,
+        'FindBin'      => 0,
+        'lib'          => 0,
+        'Test::More'   => 0,
+        'Data::Dumper' => 0
     },
     PREREQ_PM => {
-        #'ABC'              => 1.6,
-        #'Foo::Bar::Module' => 5.0401,
+        'Compress::Zlib' => 0,
+        'Data::Dumper'   => 0,
+        'Mojolicious'    => 4.82
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Mojolicious-Plugin-SessionCompress-*' },

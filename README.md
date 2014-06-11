@@ -10,25 +10,37 @@ Mojolicious::Plugin::SessionCompress - Session serialization and compression plu
 
     # Custom settings
 
-    use Compress::Zlib qw(memGzip memGunzip);
+    use Compress::Zlib qw(deflateInit inflateInit Z_STREAM_END);
     use Data::Dumper 'Dumper';
     $Data::Dumper::Terse = 1;
 
     plugin session_compress => {
-        compress => sub { goto &memGzip },
-        decompress => sub {
-            my $string = shift;
+      compress => sub {
+        my $string = shift;
 
-            return $out if ($out = memGunzip($string));
-            return $string;
-        },
-        serialize => sub { goto &Dumper },
-        deserialize => sub {
-            my $string = shift;
+        my $d = deflateInit(-Level => 1, -memLevel => 4, -WindowBits => -15);
+        return $d->deflate($string) . $d->flush;
+      },
+      decompress => sub {
+        my $string = $_[0];
 
-            return eval $string;
-        },
-        min_size => 75
+        my $d = inflateInit(-WindowBits => -15);
+        my ($inflated, $status) = $d->inflate($string);
+        # Check to see if it's actually compressed
+        return $_[0] if $status != Z_STREAM_END || length($inflated) <= 1;
+        return $inflated;
+      },
+      serialize => sub {
+        my $hashref = shift;
+
+        return Dumper($hashref);
+      },
+      deserialize => sub {
+        my $string = shift;
+
+        return eval $string;
+      },
+      min_size => 100
     };
 
 # DESCRIPTION
@@ -46,21 +58,22 @@ paired respectively.
 
     # This and the following are the defaults used internally
     compress => sub {
-        my $string = shift;
+      my $string = shift;
 
-        my $d = Compress::Zlib::deflateInit(-Level => 1, -memLevel => 5, -WindowBits => -15);
-        return $d->deflate($string) . $d->flush;
+      my $d = Compress::Zlib::deflateInit(-Level => 1, -memLevel => 5, -WindowBits => -15);
+      return $d->deflate($string) . $d->flush;
     }
 
 ## `decompress`
 
     decompress => sub {
-        my $string = $_[0];
+      my $string = $_[0];
 
-        my $d = Compress::Zlib::inflateInit(-WindowBits => -15);
-        my ($inflated, $status) = $d->inflate($string);
-        return $_[0] if $status != Compress::Zlib::Z_STREAM_END; # Check to see if it's actually compressed
-        return $inflated;
+      my $d = Compress::Zlib::inflateInit(-WindowBits => -15);
+      my ($inflated, $status) = $d->inflate($string);
+      # Check to see if it's actually compressed
+      return $_[0] if $status != Compress::Zlib::Z_STREAM_END || length($inflated) <= 1;
+      return $inflated;
     }
 
 ## `serialize`

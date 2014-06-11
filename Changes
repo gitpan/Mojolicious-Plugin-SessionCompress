@@ -1,5 +1,7 @@
-Revision history for Mojolicious-Plugin-SessionCompress
 
-0.01    Date/time
+0.02    2014-06-11
+  - Tests work on 5.10.1 and 5.12.4 now.
+  - Check compressed size to be bigger than one byte
+
+0.01    2014-06-11
         First version, released on an unsuspecting world.
-

@@ -2,8 +2,8 @@ Changes
 ignore.txt
 lib/Mojolicious/Plugin/SessionCompress.pm
 Makefile.PL
-MANIFEST			This list of files
-README
+MANIFEST
+README.md
 t/default_settings.t
 t/custom_settings.t
 t/manifest.t

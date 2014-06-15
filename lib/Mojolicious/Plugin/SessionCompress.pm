@@ -1,11 +1,10 @@
 package Mojolicious::Plugin::SessionCompress;
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojolicious::Sessions;
 use Mojo::Util ();
 use Mojo::JSON ();
 use Compress::Zlib ();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub register {
   my ($self, $app, $conf) = @_;
@@ -43,19 +42,19 @@ sub register {
     $deserialize = \&Mojo::JSON::j;
   }
 
-  Mojo::Util::monkey_patch 'Mojolicious::Sessions',
-    encode_json => sub {
-      my $hashref = shift;
+  $app->sessions->serialize(sub {
+    my $hashref = shift;
 
-      my $serialized = $serialize->($hashref);
-      return $serialized if (length $serialized < $min_size);
-      return $compress->($serialized);
-    },
-    j => sub {
-      my $string = shift;
+    my $serialized = $serialize->($hashref);
+    return $serialized if (length $serialized < $min_size);
+    return $compress->($serialized);
+  });
 
-      return $deserialize->($decompress->($string));
-    };
+  $app->sessions->deserialize(sub {
+    my $string = shift;
+
+    return $deserialize->($decompress->($string));
+  });
 }
 
 1;
@@ -143,11 +142,10 @@ Mojolicious::Plugin::SessionCompress - Session serialization and compression plu
 
     min_size => 250
 
-=head1 CAVEATS
+=head1 OLD VERSION CONSIDERATIONS
 
-Mojolicious::Plugin::SessionCompress relies on Mojo::Util::monkey_patch to override j and encode_json within
-Mojolicious::Sessions. This may seem hack-y to some. Always test your app after installing a new version of
-Mojolicious.
+Mojolicious::Plugin::SessionCompress versions prior to 0.03 rely on Mojo::Util::monkey_patch to override j and
+encode_json within Mojolicious::Sessions. This may seem hack-y to some.
 
 =head1 SEE ALSO
 

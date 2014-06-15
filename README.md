@@ -90,11 +90,10 @@ paired respectively.
 
     min_size => 250
 
-# CAVEATS
+# OLD VERSION CONSIDERATIONS
 
-Mojolicious::Plugin::SessionCompress relies on Mojo::Util::monkey_patch to override j and encode_json within
-Mojolicious::Sessions. This may seem hack-y to some. Always test your app after installing a new version of
-Mojolicious.
+Mojolicious::Plugin::SessionCompress versions prior to 0.03 rely on Mojo::Util::monkey_patch to override j and
+encode_json within Mojolicious::Sessions. This may seem hack-y to some.
 
 # SEE ALSO
 
